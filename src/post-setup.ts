@@ -49,6 +49,7 @@ const main = async () => {
   const lockfile = getLockfile(packageManager);
   const result = await getExecOutput(command, args);
   const version = await getExecOutput('node', ['--version']).then((result) => new SemVer(result.stdout));
+  const flag = process.env.flag || 'default';
 
   info(`Resolved cache directory => ${result.stdout}`);
   setOutput('pkg-manager', packageManager);
@@ -57,11 +58,11 @@ const main = async () => {
   const hash = await hashFiles(`**/${lockfile}`);
   debug(`lockfile hash [${lockfile}] => ${hash}`);
 
-  const primaryKey = `${packageManager}-${os[process.platform]}-${version.major}-${hash}`;
+  const primaryKey = `${packageManager}-${os[process.platform]}-${version.major}-${flag}-${hash}`;
   debug(`primary key => ${primaryKey}`);
 
   const nmHash = await hashFiles(nodeModulesDir);
-  const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${nmHash}`;
+  const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${flag}-${nmHash}`;
 
   await saveCache([result.stdout.trim()], primaryKey);
   await saveCache([nodeModulesDir], nmPrimaryKey);
