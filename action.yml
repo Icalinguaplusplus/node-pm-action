@@ -42,6 +42,11 @@ inputs:
     required: false
     default: 'detect'
 
+  flag:
+    description: The flag added to the key.
+    required: false
+    default: 'default'
+
 outputs:
   cache-hit:
     description: If the package manager cache was already cached and it was restored.

@@ -23,7 +23,7 @@ jobs:
           node-version: 18.x
 
       - name: Cache Yarn and node-modules
-        uses: auguwu/node-pm-cache@master
+        uses: Icalinguaplusplus/node-pm-action@master
         with:
           node-modules: ./node_modules
           package-manager: yarn # Leave this out to let the action to detect it.
@@ -39,6 +39,7 @@ This will produce a cache bundle with the following keys:
 | :---------------- | :----------------------------------- | :------------------------------------- | :-------- | :--------------- |
 | `node-modules`    | **Path** (relative or absolute)      | The `node-modules` directory to cache. | false     | `./node_modules` |
 | `package-manager` | **pnpm**/**yarn**/**npm**/**detect** | The package manager to cache objects.  | false     | `"detect"`       |
+| `flag`            | **string**                           | The flag added to the key.             | false     | `"default"`      |
 
 ## Outputs
 

@@ -49,7 +49,7 @@ const main = async () => {
   const lockfile = getLockfile(packageManager);
   const result = await getExecOutput(command, args);
   const version = await getExecOutput('node', ['--version']).then((result) => new SemVer(result.stdout));
-  const flag = process.env.flag || 'default';
+  const flag = getInput('flag', { trimWhitespace: true });
 
   info(`Resolved cache directory => ${result.stdout}`);
   setOutput('pkg-manager', packageManager);
