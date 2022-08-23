@@ -84,7 +84,7 @@ export const getCacheDirCommand = async (packageManager: PackageManager): Promis
     }
 
     case 'pnpm':
-      return ['pnpm', 'get', 'store'];
+      return ['pnpm', 'store', 'path'];
 
     default:
       throw new Error('Unable to get cache dir command.');
