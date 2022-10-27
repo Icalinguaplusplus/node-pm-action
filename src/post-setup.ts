@@ -25,7 +25,7 @@ import { type PackageManager, assertValidValue, detectPackageManager, getCacheDi
 import { debug, getInput, info, setFailed, setOutput } from '@actions/core';
 import { getExecOutput } from '@actions/exec';
 import { hashFiles } from '@actions/glob';
-import { saveCache, exists } from '@actions/cache';
+import { saveCache } from '@actions/cache';
 import { SemVer } from 'semver';
 import * as core from '@actions/core';
 
@@ -65,8 +65,8 @@ const main = async () => {
   const nmHash = await hashFiles(nodeModulesDir);
   const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${flag}-${nmHash}`;
 
-  if (!exists(primaryKey)) await saveCache([result.stdout.trim()], primaryKey);
-  if (!exists(nmPrimaryKey)) await saveCache([nodeModulesDir], nmPrimaryKey);
+  if (!cache) await saveCache([result.stdout.trim()], primaryKey);
+  if (!core.getState("node-modules-cache-hit")) await saveCache([nodeModulesDir], nmPrimaryKey);
 
   info('done!');
 };

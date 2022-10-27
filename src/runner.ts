@@ -66,6 +66,7 @@ const main = async () => {
   ]);
 
   core.setOutput('cache-hit', Boolean(key));
+  core.saveState('cache-hit', Boolean(key));
   core.saveState('nodepm:cachePrimaryKey', primaryKey);
 
   if (key) {
@@ -81,6 +82,7 @@ const main = async () => {
   ]);
 
   core.setOutput('node-modules-cache-hit', Boolean(nodeModulesCache));
+  core.saveState('node-modules-cache-hit', Boolean(nodeModulesCache));
   core.saveState('nodepm:nmPrimaryKey', nmPrimaryKey);
 
   if (nodeModulesCache) {
