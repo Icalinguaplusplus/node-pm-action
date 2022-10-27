@@ -21,58 +21,26 @@
  * SOFTWARE.
  */
 
-import { type PackageManager, assertValidValue, detectPackageManager, getCacheDirCommand, getLockfile } from './detect';
-import { debug, getInput, info, setFailed, setOutput } from '@actions/core';
-import { getExecOutput } from '@actions/exec';
-import { hashFiles } from '@actions/glob';
 import { saveCache } from '@actions/cache';
-import { SemVer } from 'semver';
 import * as core from '@actions/core';
 
-const os: Record<string, string> = {
-  darwin: 'macos',
-  linux: 'linux',
-  win32: 'windows'
-};
-
 const main = async () => {
-  if (core.getState("cache-hit") && core.getState("node-modules-cache-hit")) {
-    info('No need to save cache');
+  if (core.getState('cache-hit') && core.getState('node-modules-cache-hit')) {
+    core.info('No need to save cache.');
     return;
   }
-  info('Saving package manager and node-modules cache...');
+  core.info('Saving package manager and node-modules cache...');
+  
+  const primaryKey = core.getState('nodepm:cachePrimaryKey');
+  core.info(`primary key => ${primaryKey}`);
 
-  const nodeModulesDir = getInput('node-modules', { trimWhitespace: true });
-  let packageManager = getInput('package-manager', { trimWhitespace: true }) as unknown as PackageManager;
+  const nmPrimaryKey = core.getState('nodepm:nmPrimaryKey');
+  core.info(`nm primary key => ${nmPrimaryKey}`);
 
-  assertValidValue(packageManager);
-  if (packageManager === 'detect') {
-    packageManager = await detectPackageManager();
-  }
+  if (!core.getState('cache-hit')) await saveCache([result.stdout.trim()], primaryKey);
+  if (!core.getState('node-modules-cache-hit')) await saveCache([nodeModulesDir], nmPrimaryKey);
 
-  const [command, ...args] = await getCacheDirCommand(packageManager);
-  const lockfile = getLockfile(packageManager);
-  const result = await getExecOutput(command, args);
-  const version = await getExecOutput('node', ['--version']).then((result) => new SemVer(result.stdout));
-  const flag = getInput('flag', { trimWhitespace: true });
-
-  info(`Resolved cache directory => ${result.stdout}`);
-  setOutput('pkg-manager', packageManager);
-  setOutput('lockfile', lockfile);
-
-  const hash = await hashFiles(`**/${lockfile}`);
-  debug(`lockfile hash [${lockfile}] => ${hash}`);
-
-  const primaryKey = `${packageManager}-${os[process.platform]}-${version.major}-${flag}-${hash}`;
-  debug(`primary key => ${primaryKey}`);
-
-  const nmHash = await hashFiles(nodeModulesDir);
-  const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${flag}-${nmHash}`;
-
-  if (!core.getState("cache-hit")) await saveCache([result.stdout.trim()], primaryKey);
-  if (!core.getState("node-modules-cache-hit")) await saveCache([nodeModulesDir], nmPrimaryKey);
-
-  info('done!');
+  core.info('done!');
 };
 
-main().catch((ex) => setFailed(ex));
+main().catch((ex) => core.setFailed(ex));
