@@ -64,8 +64,8 @@ const main = async () => {
   const nmHash = await hashFiles(nodeModulesDir);
   const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${flag}-${nmHash}`;
 
-  await saveCache([result.stdout.trim()], primaryKey);
-  await saveCache([nodeModulesDir], nmPrimaryKey);
+  if (!core.getState("cache-hit")) await saveCache([result.stdout.trim()], primaryKey);
+  if (!core.getState("node-modules-cache-hit")) await saveCache([nodeModulesDir], nmPrimaryKey);
 
   info('done!');
 };
