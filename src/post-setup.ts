@@ -21,26 +21,47 @@
  * SOFTWARE.
  */
 
+import { type PackageManager, assertValidValue, detectPackageManager, getCacheDirCommand, getLockfile } from './detect';
+import { debug, getInput, info, setFailed, setOutput } from '@actions/core';
+import { getExecOutput } from '@actions/exec';
 import { saveCache } from '@actions/cache';
+import { SemVer } from 'semver';
 import * as core from '@actions/core';
 
 const main = async () => {
-  if (core.getState('cache-hit') && core.getState('node-modules-cache-hit')) {
-    core.info('No need to save cache.');
-    return;
-  }
-  core.info('Saving package manager and node-modules cache...');
-  
   const primaryKey = core.getState('nodepm:cachePrimaryKey');
   core.info(`primary key => ${primaryKey}`);
 
   const nmPrimaryKey = core.getState('nodepm:nmPrimaryKey');
   core.info(`nm primary key => ${nmPrimaryKey}`);
 
+  if (core.getState('cache-hit') && core.getState('node-modules-cache-hit')) {
+    info('No need to save cache');
+    return;
+  }
+  info('Saving package manager and node-modules cache...');
+
+  const nodeModulesDir = getInput('node-modules', { trimWhitespace: true });
+  let packageManager = getInput('package-manager', { trimWhitespace: true }) as unknown as PackageManager;
+
+  assertValidValue(packageManager);
+  if (packageManager === 'detect') {
+    packageManager = await detectPackageManager();
+  }
+
+  const [command, ...args] = await getCacheDirCommand(packageManager);
+  const lockfile = getLockfile(packageManager);
+  const result = await getExecOutput(command, args);
+  const version = await getExecOutput('node', ['--version']).then((result) => new SemVer(result.stdout));
+  const flag = getInput('flag', { trimWhitespace: true });
+
+  info(`Resolved cache directory => ${result.stdout}`);
+
+
   if (!core.getState('cache-hit')) await saveCache([result.stdout.trim()], primaryKey);
   if (!core.getState('node-modules-cache-hit')) await saveCache([nodeModulesDir], nmPrimaryKey);
 
-  core.info('done!');
+  info('done!');
 };
 
-main().catch((ex) => core.setFailed(ex));
+main().catch((ex) => setFailed(ex));
