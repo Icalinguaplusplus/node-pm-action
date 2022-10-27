@@ -36,6 +36,10 @@ const os: Record<string, string> = {
 };
 
 const main = async () => {
+  if (core.getState("cache-hit") && core.getState("node-modules-cache-hit")) {
+    info('No need to save cache');
+    return;
+  }
   info('Saving package manager and node-modules cache...');
 
   const nodeModulesDir = getInput('node-modules', { trimWhitespace: true });
