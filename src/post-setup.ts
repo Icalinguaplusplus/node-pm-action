@@ -35,10 +35,11 @@ const main = async () => {
   const nmPrimaryKey = core.getState('nodepm:nmPrimaryKey');
   core.info(`nm primary key => ${nmPrimaryKey}`);
 
-  if (core.getState('cache-hit') && core.getState('node-modules-cache-hit')) {
-    info('No need to save cache');
+  if (core.getState('cache-hit:cachePrimaryKey') === primaryKey) {
+    info('No need to save cache.');
     return;
   }
+
   info('Saving package manager and node-modules cache...');
 
   const nodeModulesDir = getInput('node-modules', { trimWhitespace: true });
@@ -58,8 +59,8 @@ const main = async () => {
   info(`Resolved cache directory => ${result.stdout}`);
 
 
-  if (!core.getState('cache-hit')) await saveCache([result.stdout.trim()], primaryKey);
-  if (!core.getState('node-modules-cache-hit')) await saveCache([nodeModulesDir], nmPrimaryKey);
+  await saveCache([result.stdout.trim()], primaryKey);
+  await saveCache([nodeModulesDir], nmPrimaryKey);
 
   info('done!');
 };
