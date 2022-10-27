@@ -27,6 +27,7 @@ import { getExecOutput } from '@actions/exec';
 import { hashFiles } from '@actions/glob';
 import { saveCache } from '@actions/cache';
 import { SemVer } from 'semver';
+import * as core from '@actions/core';
 
 const os: Record<string, string> = {
   darwin: 'macos',
