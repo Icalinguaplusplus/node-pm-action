@@ -24,22 +24,18 @@
 import { type PackageManager, assertValidValue, detectPackageManager, getCacheDirCommand, getLockfile } from './detect';
 import { debug, getInput, info, setFailed, setOutput } from '@actions/core';
 import { getExecOutput } from '@actions/exec';
+import { hashFiles } from '@actions/glob';
 import { saveCache } from '@actions/cache';
 import { SemVer } from 'semver';
 import * as core from '@actions/core';
 
+const os: Record<string, string> = {
+  darwin: 'macos',
+  linux: 'linux',
+  win32: 'windows'
+};
+
 const main = async () => {
-  const primaryKey = core.getState('nodepm:cachePrimaryKey');
-  core.info(`primary key => ${primaryKey}`);
-
-  const nmPrimaryKey = core.getState('nodepm:nmPrimaryKey');
-  core.info(`nm primary key => ${nmPrimaryKey}`);
-
-  if (core.getState('cache-hit:cachePrimaryKey') === primaryKey) {
-    info('No need to save cache.');
-    return;
-  }
-
   info('Saving package manager and node-modules cache...');
 
   const nodeModulesDir = getInput('node-modules', { trimWhitespace: true });
@@ -58,7 +54,19 @@ const main = async () => {
 
   info(`Resolved cache directory => ${result.stdout}`);
 
+  const primaryKey = core.getState('nodepm:cachePrimaryKey');
+  core.info(`primary key => ${primaryKey}`);
 
+
+  if (core.getState('cache-hit:cachePrimaryKey') === primaryKey) {
+    info('No need to save cache.');
+    return;
+  }
+
+  const nmHash = await hashFiles(nodeModulesDir);
+  const nmPrimaryKey = `${packageManager}-${os[process.platform]}-node_modules-${version.major}-${flag}-${nmHash}`;
+  core.info(`nm primary key => ${nmPrimaryKey}`);
+  
   await saveCache([result.stdout.trim()], primaryKey);
   await saveCache([nodeModulesDir], nmPrimaryKey);
 
